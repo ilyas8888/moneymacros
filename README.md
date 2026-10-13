@@ -4,26 +4,25 @@
 
 ## Pitch
 
+### Application Overview
 
-Application Overview
+Developed using Spring Boot and React, this financial management application helps recent graduates, job seekers, and working professionals organize their finances around their salaries. It allows users to align their career goals with their financial needs and personal projects, and to compare job offers by their real impact on budget and goals.
 
-Developed using Spring Boot and React, this financial management application helps recent graduates, job seekers, and working professionals organize their finances around their salaries. It allows users to align their career goals with their financial needs and personal projects, ultimately helping them find the best job opportunities to support their financial goals.
+### Security
 
-System Architecture
+To ensure robust security, user passwords are hashed using Argon2id. The session ID lives in an HttpOnly cookie, so JavaScript cannot read it and an XSS bug cannot steal the session.
+
+### Key Differentiator
+
+Integration of Budgeting and Salary Calculations: While many financial apps offer general budget management, very few connect personal budget planning directly with a user's customized career and salary situation.
+
+## Architecture
 
 The application follows a Modular Monolith architecture:
 
 Backend: A single Spring Boot project structured into distinct modules.
 
 Database: A single PostgreSQL database.
-
-Security
-
-To ensure robust security, user passwords are hashed using Argon2id. Session tokens and cookies are stored in HttpOnly cookies as a best practice to disallow JavaScript from reading the cookie and protect against Cross-Site Scripting (XSS) attacks.
-
-Key Differentiator
-
-Integration of Budgeting and Salary Calculations: While many financial apps offer general budget management, very few connect personal budget planning directly with a user's customized career and salary situation.
 
 ## Docs
 
