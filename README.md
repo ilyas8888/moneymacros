@@ -5,11 +5,25 @@
 ## Pitch
 
 
-Cette application de gestion des finances, développée en framework spring boot et React, sert a aider les jeunes diplomés, chercheurs du travail ou travailleur qui veullent organiser leurs finances en conrrespondant a leurs salaires, comparer le post desiré avec leurs besions et projets financiers, et trouver le meilleur emplois pour y corespendre.
-On suit une architecture Monolithe modulaire, une seule base de données PostgreSQL, un seul projet Spring Boot, composé de plusieurs modules.
-l'application serait sécurisée avec des mot de passe hashé avec Argon2id, les cookies stocké dans HttpOnly comme bonne pratique pour éviter les attaques XSS.
-Le points principale qui distingue notre application:
--la liaison entre gestion des budgets et calcul de salaires: on trouve beacoups des application dans le marché qui offre gestions de budget, mais trés peu qui lie le budget avec la situation professsionelle personalisée comme notre.
+Application Overview
+
+Developed using Spring Boot and React, this financial management application helps recent graduates, job seekers, and working professionals organize their finances around their salaries. It allows users to align their career goals with their financial needs and personal projects, ultimately helping them find the best job opportunities to support their financial goals.
+
+System Architecture
+
+The application follows a Modular Monolith architecture:
+
+Backend: A single Spring Boot project structured into distinct modules.
+
+Database: A single PostgreSQL database.
+
+Security
+
+To ensure robust security, user passwords are hashed using Argon2id. Session tokens and cookies are stored in HttpOnly cookies as a best practice to disallow JavaScript from reading the cookie and protect against Cross-Site Scripting (XSS) attacks.
+
+Key Differentiator
+
+Integration of Budgeting and Salary Calculations: While many financial apps offer general budget management, very few connect personal budget planning directly with a user's customized career and salary situation.
 
 ## Docs
 
