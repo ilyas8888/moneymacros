@@ -26,7 +26,7 @@ saving for a used car. Needs safe-to-spend today, a healthy Budget-Score, and an
 honest answer on whether his car goal date is realistic at his current spending.
 
 ## MVP scope — due 10 Nov 2026
-- **Accounts:** email sign-up, login, password reset.
+- **Accounts:** email sign-up, login.
 - **Onboarding:** net income, budget method (50/30/20, 70/20/10, custom),
   currency (MAD).
 - **Expense diary:** log expenses against Needs / Wants / Future and categories;
@@ -36,13 +36,14 @@ honest answer on whether his car goal date is realistic at his current spending.
 - **Goals:** named goal with target amount and target date; progress and a
   projected completion date.
 - **Career comparator (Morocco 2026):** enter 1–2 offers → net take-home, effect
-  on budget and goal dates, 5-year projection, apply one offer to the plan.
+  on budget and goal dates, 5-year projection, apply one offer to the plan;
+  reverse mode: the salary needed to reach a goal by a date.
 - **Demo mode:** one click loads Salma's data; fully explorable with no signup.
 - **Deployed** to a public URL with CI (build + tests on every push).
 
 ## Out of scope for the MVP (planned later)
+- Password reset by email (needs an email-sending service).
 - France tax rules and MAD/EUR side-by-side comparison.
-- Reverse career mode (the salary needed to hit a goal by a date).
 - CSV / bank import; AI quick-log of expenses.
 - 2FA, Arabic RTL layout, Expo mobile app.
 - Shared / household budgets, multi-currency accounts, live bank sync.
@@ -64,7 +65,8 @@ honest answer on whether his car goal date is realistic at his current spending.
    user's real data.
 4. A user can create a goal and see a projected completion date.
 5. The Morocco comparator turns two offers into net pay and shows each one's
-   effect on the budget and on goal dates, with a 5-year projection.
+   effect on the budget and on goal dates, with a 5-year projection; reverse
+   mode returns the salary needed to reach a goal by a chosen date.
 6. Every headline number can reveal the formula behind it.
 7. The app is deployed to a public URL; CI runs build + tests on every push and
    is green.

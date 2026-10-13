@@ -21,7 +21,7 @@ is the shared vocabulary for code, UI copy, and docs — prefer these terms.
 | Nutrition label | Formula view | The "show the math" panel: the inputs and formula behind any computed number. |
 | Meal plan | Plan | The active budget: income + method + goals that spending is measured against. |
 | Dietitian consult | Career simulator | Turns an offer's gross salary into real net take-home and shows its effect on the plan and goal dates. |
-| Calorie goal by date | Reverse career mode | *(Post-MVP)* The gross salary needed to reach a goal by a chosen date. |
+| Calorie goal by date | Reverse career mode | The gross salary needed to reach a goal by a chosen date. |
 | Sample meal plan | Demo mode | A pre-filled plan (Salma's) that lets anyone explore with no signup. |
 
 ## Core money terms (no nutrition metaphor)

@@ -12,6 +12,7 @@ for the nutrition → money vocabulary used across code and UI.
 api/    Spring Boot backend (Java 25, Temurin)   # created later
 web/    React frontend                           # created later
 docs/   PRODUCT.md, GLOSSARY.md                  # product + reference
+        ARCHITECTURE.md, adr/                    # design + ADRs, created later
 ```
 
 ## Commands
@@ -32,6 +33,8 @@ docs/   PRODUCT.md, GLOSSARY.md                  # product + reference
 - **PowerShell only.** Every command you give me is Windows PowerShell syntax
   (no bash, no WSL).
 - **Conventional Commits.** e.g. `feat:`, `fix:`, `docs:`, `chore:`, `ci:`.
+- **English, with i18n.** Code, comments, commit messages and docs in English;
+  user-facing text only through i18n.
 - **End every task with the REPORT** (format below).
 
 ## REPORT format
