@@ -46,3 +46,8 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ------- Obsidian (docs/ is an Obsidian vault) -------
+.obsidian/
+.trash/
+docs/private/

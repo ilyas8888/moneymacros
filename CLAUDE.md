@@ -35,6 +35,10 @@ docs/   PRODUCT.md, GLOSSARY.md                  # product + reference
 - **Conventional Commits.** e.g. `feat:`, `fix:`, `docs:`, `chore:`, `ci:`.
 - **English, with i18n.** Code, comments, commit messages and docs in English;
   user-facing text only through i18n.
+- **Obsidian vault.** docs/ is also an Obsidian vault: in docs, use relative
+  Markdown links, never [[wikilinks]], so links work on GitHub too. Never read,
+  edit or commit docs/private/ (my personal notes) or .obsidian/ (Obsidian
+  settings).
 - **End every task with the REPORT** (format below).
 
 ## REPORT format
