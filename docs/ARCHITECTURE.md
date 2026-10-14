@@ -259,19 +259,19 @@ From the click to the refreshed dashboard. Events fan out from `career` through
 sequenceDiagram
     actor U as Graduate
     participant W as Web app
-    box rgb(254,205,211) career
+    box rgba(225,29,72,0.18) career
     participant C as career
     end
-    box rgb(191,219,254) profile
+    box rgba(37,99,235,0.18) profile
     participant P as profile
     end
-    box rgb(187,247,208) planning
+    box rgba(22,163,74,0.18) planning
     participant PL as planning
     end
-    box rgb(254,240,138) goals
+    box rgba(202,138,4,0.18) goals
     participant G as goals
     end
-    box rgb(165,243,252) insights
+    box rgba(8,145,178,0.18) insights
     participant I as insights
     end
 

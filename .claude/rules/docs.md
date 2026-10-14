@@ -26,9 +26,25 @@ Every Mermaid diagram and every canvas uses the same palette. **Text is always
 | shared | `#E5E7EB` | `#6B7280` |
 
 In a Mermaid `flowchart`, apply with one `style` line per node, e.g.
-`style identity fill:#E9D5FF,stroke:#7C3AED,color:#111827`. In a
-`sequenceDiagram`, wrap each module participant in a colored `box` (Mermaid
-cannot fill a single participant otherwise).
+`style identity fill:#E9D5FF,stroke:#7C3AED,color:#111827`.
+
+In a `sequenceDiagram`, wrap each module participant in a colored `box` (Mermaid
+cannot fill a single participant otherwise). The box uses the module's **stroke
+color at 18% opacity**, so the box tint is faint and the participant text stays
+readable in both light and dark themes:
+
+| Module | Box color |
+|--------|-----------|
+| identity | `rgba(124,58,237,0.18)` |
+| profile | `rgba(37,99,235,0.18)` |
+| planning | `rgba(22,163,74,0.18)` |
+| ledger | `rgba(234,88,12,0.18)` |
+| goals | `rgba(202,138,4,0.18)` |
+| career | `rgba(225,29,72,0.18)` |
+| insights | `rgba(8,145,178,0.18)` |
+| shared | `rgba(107,114,128,0.18)` |
+
+Example: `box rgba(225,29,72,0.18) career`.
 
 **C4 views** use the classic C4 colors, white text:
 
