@@ -12,7 +12,7 @@ for the nutrition → money vocabulary used across code and UI.
 api/    Spring Boot backend (Java 25, Temurin)   # created later
 web/    React frontend                           # created later
 docs/   PRODUCT.md, GLOSSARY.md                  # product + reference
-        ARCHITECTURE.md, adr/                    # design + ADRs, created later
+        ARCHITECTURE.md, adr/                    # design + ADRs
 ```
 
 ## Commands

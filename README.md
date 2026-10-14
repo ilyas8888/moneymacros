@@ -24,6 +24,10 @@ Backend: A single Spring Boot project structured into distinct modules.
 
 Database: A single PostgreSQL database.
 
+See [Architecture](docs/ARCHITECTURE.md) for the C4 views, module map, data
+model and flow, and the [Architecture Decision Records](docs/adr/README.md) for
+the decisions behind them.
+
 ## Docs
 
 - [Product](docs/PRODUCT.md) — vision, personas, MVP scope, guardrails, success criteria.
