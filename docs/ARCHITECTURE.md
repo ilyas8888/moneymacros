@@ -27,8 +27,12 @@ flowchart TB
     mm -.->|"imports transactions<br/>(after MVP)"| aggregator
     mm -.->|"sends password-reset mail<br/>(after MVP)"| email
 
-    classDef future stroke-dasharray: 5 5;
-    class aggregator,email future;
+    classDef person fill:#08427B,color:#ffffff;
+    classDef system fill:#1168BD,color:#ffffff;
+    classDef external fill:#999999,color:#ffffff,stroke-dasharray:5 5;
+    class graduate person;
+    class mm system;
+    class aggregator,email external;
 ```
 
 ## C4 — Containers
@@ -52,7 +56,11 @@ flowchart TB
     api -->|"reads/writes (JDBC)"| db
     mobile -.->|"JSON over HTTPS (after MVP)"| api
 
-    classDef future stroke-dasharray: 5 5;
+    classDef person fill:#08427B,color:#ffffff;
+    classDef container fill:#438DD5,color:#ffffff;
+    classDef future fill:#999999,color:#ffffff,stroke-dasharray:5 5;
+    class graduate person;
+    class web,api,db container;
     class mobile future;
 ```
 
@@ -61,6 +69,11 @@ flowchart TB
 The API is a modular monolith (Spring Modulith, [ADR 001](adr/001-modular-monolith.md)).
 Each module owns its tables and talks to others **only through their public API
 or their published events** — never by reaching into another's internals.
+
+> [!IMPORTANT]
+> A module may touch another only through its public API or the events it
+> publishes. No cross-module table access, no shared internals — this is what
+> keeps the monolith decomposable.
 
 ```mermaid
 flowchart LR
@@ -83,6 +96,15 @@ flowchart LR
     insights -.->|reads public API| planning
     insights -.->|reads public API| ledger
     insights -.->|reads public API| goals
+
+    style identity fill:#E9D5FF,stroke:#7C3AED,color:#111827
+    style profile fill:#BFDBFE,stroke:#2563EB,color:#111827
+    style planning fill:#BBF7D0,stroke:#16A34A,color:#111827
+    style ledger fill:#FED7AA,stroke:#EA580C,color:#111827
+    style goals fill:#FEF08A,stroke:#CA8A04,color:#111827
+    style career fill:#FECDD3,stroke:#E11D48,color:#111827
+    style insights fill:#A5F3FC,stroke:#0891B2,color:#111827
+    style shared fill:#E5E7EB,stroke:#6B7280,color:#111827
 ```
 
 Every module may use `shared` (`Money`, `Currency`, error types) — not drawn.
@@ -108,6 +130,11 @@ listens to nothing: on a dashboard request it reads `planning`, `ledger` and
 
 Every user-owned table carries `user_id`. Money is `amount_minor BIGINT` plus
 `currency CHAR(3)` (ISO 4217); see [ADR 002](adr/002-money-minor-units.md).
+
+> [!WARNING]
+> Money is never a `double`. Store integer minor units + an ISO 4217 currency,
+> and compute with `BigDecimal`. Floating point silently loses precision on
+> money.
 
 ```mermaid
 erDiagram
@@ -222,15 +249,31 @@ Spring Modulith, so they are not drawn here.
 From the click to the refreshed dashboard. Events fan out from `career` through
 `profile`, `planning` and `goals`; `insights` is read on demand for the dashboard.
 
+> [!IMPORTANT]
+> Module events are handled **synchronously, in the publisher's transaction**
+> (see [ADR 007](adr/007-synchronous-module-events.md)). The whole fan-out
+> commits or rolls back together, so the dashboard is current the moment the
+> apply call returns.
+
 ```mermaid
 sequenceDiagram
     actor U as Graduate
     participant W as Web app
+    box rgb(254,205,211) career
     participant C as career
+    end
+    box rgb(191,219,254) profile
     participant P as profile
+    end
+    box rgb(187,247,208) planning
     participant PL as planning
+    end
+    box rgb(254,240,138) goals
     participant G as goals
+    end
+    box rgb(165,243,252) insights
     participant I as insights
+    end
 
     U->>W: Click "Apply this offer"
     W->>C: POST /offers/{id}/apply (cookie + CSRF)

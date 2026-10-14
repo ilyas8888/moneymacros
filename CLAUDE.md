@@ -38,7 +38,8 @@ docs/   PRODUCT.md, GLOSSARY.md                  # product + reference
 - **Obsidian vault.** docs/ is also an Obsidian vault: in docs, use relative
   Markdown links, never [[wikilinks]], so links work on GitHub too. Never read,
   edit or commit docs/private/ (my personal notes) or .obsidian/ (Obsidian
-  settings).
+  settings). docs/learn/ holds my learning notes (Obsidian only, git-ignored):
+  you may create and edit them, following .claude/rules/docs.md.
 - **End every task with the REPORT** (format below).
 
 ## REPORT format
