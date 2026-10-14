@@ -17,8 +17,10 @@ Use **PostgreSQL as the only datastore** for the MVP:
 
 - Domain data in PostgreSQL tables.
 - Sessions via Spring Session, backed by PostgreSQL.
-- In-process application events via Spring Modulith, with its event-publication
-  log in PostgreSQL for reliable republication.
+- In-process application events, synchronous for now (see
+  [ADR 007](007-synchronous-module-events.md)); Spring Modulith's
+  event-publication log in PostgreSQL matters once listeners become
+  asynchronous.
 
 No Redis, no message broker.
 

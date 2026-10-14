@@ -1,11 +1,11 @@
 # MoneyMacros — Architecture
 
-This document describes the system at three levels: the C4 **context** and
-**container** views, the **API module map**, the **data model** (ERD v1), and
-one **sequence** for the core flow. Diagrams use Mermaid so they render on
-GitHub and in Obsidian. Start with [PRODUCT.md](PRODUCT.md) for scope and
-[GLOSSARY.md](GLOSSARY.md) for the nutrition → money vocabulary; design
-decisions live in [adr/](adr/README.md).
+This document describes the system through a few complementary views: the C4
+**context** and **container** views, the **API module map**, the **data model**
+(ERD v1), and one **sequence** for the core flow. Diagrams use Mermaid so they
+render on GitHub and in Obsidian. Start with [PRODUCT.md](PRODUCT.md) for scope,
+[GLOSSARY.md](GLOSSARY.md) for the vocabulary; decisions live in
+[adr/](adr/README.md).
 
 > Mermaid's dedicated C4 syntax is still experimental, so the C4 views below are
 > drawn as plain `flowchart` diagrams.
@@ -58,10 +58,9 @@ flowchart TB
 
 ## API — module map
 
-The API is a modular monolith (Spring Modulith, see
-[ADR 001](adr/001-modular-monolith.md)). Each module owns its tables and talks
-to other modules **only through their public API or their published events** —
-never by reaching into another module's internals.
+The API is a modular monolith (Spring Modulith, [ADR 001](adr/001-modular-monolith.md)).
+Each module owns its tables and talks to others **only through their public API
+or their published events** — never by reaching into another's internals.
 
 ```mermaid
 flowchart LR
@@ -78,34 +77,37 @@ flowchart LR
     career -->|OfferApplied| profile
     profile -->|ProfileUpdated| planning
     planning -->|PlanRecalculated| goals
-    planning -->|PlanRecalculated| insights
-    ledger -->|TransactionLogged| insights
+    career -.->|reads public API| profile
     career -.->|reads public API| planning
     career -.->|reads public API| goals
-
-    shared -.->|Money, Currency, errors| identity
+    insights -.->|reads public API| planning
+    insights -.->|reads public API| ledger
+    insights -.->|reads public API| goals
 ```
+
+Every module may use `shared` (`Money`, `Currency`, error types) — not drawn.
 
 | Module | Owns | Listens to | Publishes |
 |--------|------|------------|-----------|
 | **identity** | accounts, sessions, audit log | — | `UserRegistered` |
 | **profile** | country, currency, city, household, net income | `UserRegistered`, `OfferApplied` | `ProfileUpdated` |
 | **planning** | budget method, macro and category targets | `ProfileUpdated` | `PlanRecalculated` |
-| **ledger** | expenses, categories, recipes | — | `TransactionLogged` |
-| **goals** | goals and projected dates | `PlanRecalculated` | — |
+| **ledger** | expenses, categories, recipes | — | — |
+| **goals** | goals, contributions (money set aside for a goal) and projected dates | `PlanRecalculated` | — |
 | **career** | rule packs, job offers, comparisons, reverse mode | — | `OfferApplied` |
-| **insights** | safe-to-spend, Budget-Score | `TransactionLogged`, `PlanRecalculated` | — |
+| **insights** | safe-to-spend and Budget-Score calculations; stores nothing | — | — |
 | **shared** | `Money`, `Currency`, error types (no business logic) | — | — |
 
-`career` reads `planning` and `goals` through their public APIs to build
-comparisons and projections; it changes the plan only indirectly, by publishing
-`OfferApplied`.
+`career` reads `profile` (household size, for family tax deductions), `planning`
+and `goals` through their public APIs to build comparisons and projections; it
+changes the plan only by publishing `OfferApplied`. `insights` stores nothing and
+listens to nothing: on a dashboard request it reads `planning`, `ledger` and
+`goals` and computes safe-to-spend and the Budget-Score on the spot.
 
 ## Data model — ERD v1
 
-Every user-owned table carries `user_id`. Money is stored as
-`amount_minor BIGINT` (minor units, e.g. centimes) plus `currency CHAR(3)`
-(ISO 4217); see [ADR 002](adr/002-money-minor-units.md).
+Every user-owned table carries `user_id`. Money is `amount_minor BIGINT` plus
+`currency CHAR(3)` (ISO 4217); see [ADR 002](adr/002-money-minor-units.md).
 
 ```mermaid
 erDiagram
@@ -118,6 +120,7 @@ erDiagram
     users ||--o{ recipes : owns
     categories ||--o{ recipes : classifies
     users ||--o{ goals : sets
+    goals ||--o{ goal_contributions : receives
     users ||--o{ job_offers : enters
     job_offers ||--o{ offer_benefits : lists
     users ||--o{ audit_events : records
@@ -181,6 +184,14 @@ erDiagram
         date target_date
         date projected_date
     }
+    goal_contributions {
+        uuid id PK
+        uuid goal_id FK
+        uuid user_id FK
+        bigint amount_minor
+        char currency
+        date contributed_on
+    }
     job_offers {
         uuid id PK
         uuid user_id FK
@@ -208,9 +219,8 @@ Spring Modulith, so they are not drawn here.
 
 ## Sequence — apply an offer to my plan
 
-From the click in the web app to the refreshed dashboard. Spring Modulith
-events fan out from `career` through `profile`, `planning`, `goals` and
-`insights`.
+From the click to the refreshed dashboard. Events fan out from `career` through
+`profile`, `planning` and `goals`; `insights` is read on demand for the dashboard.
 
 ```mermaid
 sequenceDiagram
@@ -231,10 +241,10 @@ sequenceDiagram
     PL->>PL: Recalculate macro + category targets
     PL-->>G: PlanRecalculated
     G->>G: Recompute projected goal dates
-    PL-->>I: PlanRecalculated
-    I->>I: Recompute safe-to-spend, Budget-Score
+    Note over C,G: Events run synchronously in career's transaction (ADR 007)
     C-->>W: 200 OK
     W->>I: GET /dashboard
+    Note over W,I: insights reads planning, ledger and goals via their public APIs
     I-->>W: Safe-to-spend, rings, Budget-Score, goal dates
     W-->>U: Refreshed dashboard
 ```
