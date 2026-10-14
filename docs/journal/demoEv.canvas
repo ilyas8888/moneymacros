@@ -1,0 +1,22 @@
+{
+	"nodes":[
+		{"id":"ffc79ce987655ab2","x":120,"y":180,"width":250,"height":60,"type":"text","text":"Profile"},
+		{"id":"1455d8974a6bcfc1","x":60,"y":490,"width":250,"height":60,"type":"text","text":"Shared"},
+		{"id":"ad54875dafef0a35","x":-440,"y":490,"width":250,"height":60,"type":"text","text":"Insigths"},
+		{"id":"5151fe3f08642944","x":-315,"y":340,"width":250,"height":60,"type":"text","text":"goals"},
+		{"id":"2553458abc5f2dad","x":140,"y":370,"width":170,"height":60,"type":"text","text":"Career"},
+		{"id":"d360a5dfa47e2017","x":-530,"y":240,"width":250,"height":60,"type":"text","text":"Ledger"},
+		{"id":"a5dd80f4fef8d197","x":-220,"y":40,"width":250,"height":60,"type":"text","text":"Identity"},
+		{"id":"ae335ef1d8d2b4bd","x":-65,"y":-100,"width":250,"height":60,"type":"text","text":"planning"}
+	],
+	"edges":[
+		{"id":"b5cf099736113852","fromNode":"a5dd80f4fef8d197","fromSide":"bottom","toNode":"ffc79ce987655ab2","toSide":"left","label":"Event"},
+		{"id":"17f6b0e4b45ff88e","fromNode":"ae335ef1d8d2b4bd","fromSide":"left","toNode":"d360a5dfa47e2017","toSide":"top","label":"Event"},
+		{"id":"11e0929de9dbb9ad","fromNode":"ad54875dafef0a35","fromSide":"left","toNode":"d360a5dfa47e2017","toSide":"left","label":"Read"},
+		{"id":"28f21badbb08c91d","fromNode":"2553458abc5f2dad","fromSide":"left","toNode":"5151fe3f08642944","toSide":"right","label":"Read"},
+		{"id":"8fe4e5c4ec193b3a","fromNode":"d360a5dfa47e2017","fromSide":"bottom","toNode":"5151fe3f08642944","toSide":"left","label":"Read"},
+		{"id":"d268ef44dee3f2dd","fromNode":"2553458abc5f2dad","fromSide":"top","toNode":"ffc79ce987655ab2","toSide":"bottom","label":"Read"},
+		{"id":"63d23c4b8253c3c1","fromNode":"ffc79ce987655ab2","fromSide":"bottom","toNode":"5151fe3f08642944","toSide":"top","label":"Event"},
+		{"id":"060772d2fc5f4ded","fromNode":"ffc79ce987655ab2","fromSide":"left","toNode":"d360a5dfa47e2017","toSide":"right","label":"Event"}
+	]
+}
