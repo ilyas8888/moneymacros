@@ -1,4 +1,4 @@
- today i started officially working on my "moneymacros" project.
+ today(13-10-2026) i started officially working on my "moneymacros" project.
  i read breafly the build playbook, i understood the stack we'll work with and had an idea about the project architecture.
  i sent a prompt to claude code to move fast with the configurations and check the stack conviniance.
  i wrote a demo first presentation for the application in french.

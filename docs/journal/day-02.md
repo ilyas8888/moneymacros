@@ -1,0 +1,2 @@
+today(14-10-2026), today i only sent prompt to claude code to organize the architecture and documentations in the repo, then i made the obsidian docs more intuitive, with more images, colors and diagrams.
+i will spend the remaining time reading the intuitively designed architecture,  and adr files then complete the journal and the own it work.
