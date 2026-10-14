@@ -13,10 +13,12 @@ take milliseconds, so there is no reason to defer it past the response.
 ## Decision
 
 Handle module events **synchronously, inside the publisher's transaction**,
-using plain Spring event listeners (`@EventListener` /
-`@TransactionalEventListener` as needed) — **not** `@ApplicationModuleListener`,
-which Spring Modulith runs asynchronously after commit. Publishing an event and
-handling it are part of the same transaction as the originating command.
+using plain Spring event listeners (`@EventListener` only) — **not**
+`@ApplicationModuleListener`, which Spring Modulith runs asynchronously after
+commit. Publishing an event and handling it are part of the same transaction as
+the originating command. `@TransactionalEventListener` is not used: it runs after
+the commit, so a listener's database writes would not be saved unless it starts a
+new transaction.
 
 ## Consequences
 
