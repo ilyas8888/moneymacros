@@ -8,5 +8,6 @@ import java.time.Instant;
  *
  * @param status always {@code "ok"} when the API is up
  * @param time   server time as an ISO-8601 instant
+ * @param version
  */
-public record PingResponse(String status, Instant time) {}
+public record PingResponse(String status, Instant time, String version) {}

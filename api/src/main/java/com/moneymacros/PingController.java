@@ -14,10 +14,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Tag(name = "Ping", description = "Liveness check")
 public class PingController {
-
+	private final string pingResponse;
 	@GetMapping("/api/ping")
-	@Operation(summary = "Return ok and the current server time")
+	@Operation(summary = "Return ok and the current server time and the app version")
 	public PingResponse ping() {
 		return new PingResponse("ok", Instant.now());
+	}
+	public PingController(@Value("${app.version}") String pingResponse){
+		this.pingResponse = pingResponse;
 	}
 }
