@@ -1,0 +1,17 @@
+:root {
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+  place-items: center;
+  justify-content: center;
+}
+
+main {
+  text-align: center;
+}
