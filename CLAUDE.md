@@ -9,19 +9,21 @@ for the nutrition → money vocabulary used across code and UI.
 
 ## Layout
 ```
-api/    Spring Boot backend (Java 25, Temurin)   # created later
-web/    React frontend                           # created later
+api/    Spring Boot backend (Java 25, Temurin)
+web/    React frontend
 docs/   PRODUCT.md, GLOSSARY.md                  # product + reference
         ARCHITECTURE.md, adr/                    # design + ADRs
 ```
 
 ## Commands
-<!-- TODO: fill on Day 3, once api/ and web/ exist. -->
-- Build: TODO
-- Test: TODO
-- Run (api): TODO
-- Run (web): TODO
-- Lint / format: TODO
+All commands are Windows PowerShell, run from the repo root.
+- Start database: `docker compose up -d` (stop with `docker compose down`)
+- Run (api): `cd api; .\mvnw spring-boot:run "-Dspring-boot.run.profiles=dev"`
+  (start the database first; Swagger UI at http://localhost:8080/swagger-ui.html)
+- Run (web): `cd web; npm run dev` (serves http://localhost:5173, proxies /api)
+- Build: `cd api; .\mvnw clean verify` and `cd web; npm ci; npm run build`
+- Test (all): `cd api; .\mvnw verify` (needs Docker for Testcontainers)
+- Lint / format: `cd web; npm run lint; npm run format`
 
 ## Working rules
 - **One task per session.** Do the task asked — nothing extra.
