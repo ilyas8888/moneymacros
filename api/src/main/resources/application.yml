@@ -2,6 +2,10 @@
 # the profile documents below (separated by `---`).
 spring:
   application:
+    encoding: "@project.build.sourceEncoding@"
+    java:
+      version: "@java.version@"
+
     name: api
   jpa:
     hibernate:
