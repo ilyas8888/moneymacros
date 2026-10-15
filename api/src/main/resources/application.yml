@@ -9,7 +9,8 @@ spring:
       ddl-auto: validate
     open-in-view: false
   flyway:
-    enabled: true      
+    enabled: true     
+
 app:
   version: "@project.version@"
 # Swagger UI is disabled by default; it is turned on only in the dev profile.
