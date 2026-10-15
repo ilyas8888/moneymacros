@@ -1,0 +1,35 @@
+# Base configuration shared by all profiles. Profile-specific settings live in
+# the profile documents below (separated by `---`).
+spring:
+  application:
+    name: api
+  jpa:
+    hibernate:
+      # Flyway owns the schema; Hibernate only validates against it.
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+# Swagger UI is disabled by default; it is turned on only in the dev profile.
+springdoc:
+  swagger-ui:
+    enabled: false
+
+---
+# Development profile: reads database settings from environment variables and
+# falls back to defaults that match docker-compose.yml, so `mvnw spring-boot:run`
+# with the local database needs no extra configuration.
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:moneymacros}
+    username: ${POSTGRES_USER:moneymacros}
+    password: ${POSTGRES_PASSWORD:moneymacros}
+
+# Swagger UI on in dev only, served at /swagger-ui.html.
+springdoc:
+  swagger-ui:
+    enabled: true
