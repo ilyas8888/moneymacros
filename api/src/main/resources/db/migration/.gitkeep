@@ -1,0 +1,2 @@
+# Flyway migrations live here. None yet — the first domain schema change will be
+# added as V1__*.sql (see .claude/rules/backend.md).
