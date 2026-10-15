@@ -241,8 +241,8 @@ erDiagram
     }
 ```
 
-The session and event-publication tables are created by Spring Session and
-Spring Modulith, so they are not drawn here.
+Spring Session's tables come from the library, not from a module, so they are
+not drawn here.
 
 ## Sequence — apply an offer to my plan
 
