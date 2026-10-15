@@ -20,7 +20,7 @@ public class PingController {
 	public PingResponse ping() {
 		return new PingResponse("ok", Instant.now(), version);
 	}
-	public PingController(@Value("${app.version}") String pingResponse){
-		this.pingResponse = pingResponse;
+	public PingController(@Value("${app.version}") String version){
+		this.version = version;
 	}
 }
