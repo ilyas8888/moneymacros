@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 @RestController
 @Tag(name = "Ping", description = "Liveness check")
 public class PingController {
-	private final string version;
+	private final String version;
 	@GetMapping("/api/ping")
 	@Operation(summary = "Return ok and the current server time and the app version")
 	public PingResponse ping() {
