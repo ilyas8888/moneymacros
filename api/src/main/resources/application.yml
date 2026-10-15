@@ -2,9 +2,7 @@
 # the profile documents below (separated by `---`).
 spring:
   application:
-    encoding: "@project.build.sourceEncoding@"
-    java:
-      version: "@java.version@"
+    
 
     name: api
   jpa:
@@ -14,7 +12,9 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
-
+---      
+app:
+  version: "@project.<version>@"
 # Swagger UI is disabled by default; it is turned on only in the dev profile.
 springdoc:
   swagger-ui:
