@@ -12,3 +12,4 @@ consequences. See [ARCHITECTURE.md](../ARCHITECTURE.md) for the system overview.
 | 005 | [OpenAPI as the contract; TypeScript types generated from it](005-openapi-contract.md) | Accepted |
 | 006 | [PostgreSQL only for now: no Redis, no message broker](006-postgres-only.md) | Accepted |
 | 007 | [Module events are handled synchronously](007-synchronous-module-events.md) | Accepted |
+| 008 | [One error format: RFC 9457 Problem Details](008-problem-details-errors.md) | Accepted |
