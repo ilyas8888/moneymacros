@@ -29,6 +29,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	/** One invalid field: which field and why. */
 	public record FieldError(String field, String message) {}
 
+	/**
+	 * Let Spring Security's own exceptions through instead of mapping them here:
+	 * rethrowing lets the security filter chain answer with its Problem-Detail 401
+	 * or 403 (ADR 003), so the catch-all below never turns them into a 500.
+	 */
+	@ExceptionHandler({
+			org.springframework.security.core.AuthenticationException.class,
+			org.springframework.security.access.AccessDeniedException.class })
+	void rethrowSecurityException(RuntimeException ex) throws Exception {
+		throw ex;
+	}
+
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(
 			MethodArgumentNotValidException ex,
