@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -26,7 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
  * {@code @Import}: Spring Boot's scanning skips classes nested in test classes,
  * so its endpoints never appear in a real {@code @SpringBootTest} context.
  */
-@WebMvcTest
+// Scope the slice to the test-only controller below, so the real controllers
+// (and their services) are not pulled in. addFilters = false so Spring Security's
+// default filter chain does not secure these endpoints (they would 401 first).
+@WebMvcTest(controllers = GlobalExceptionHandlerTest.ProblemController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import({ GlobalExceptionHandler.class, GlobalExceptionHandlerTest.ProblemController.class })
 class GlobalExceptionHandlerTest {
 
