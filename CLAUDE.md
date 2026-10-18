@@ -21,6 +21,9 @@ All commands are Windows PowerShell, run from the repo root.
 - Run (api): `cd api; .\mvnw spring-boot:run "-Dspring-boot.run.profiles=dev"`
   (start the database first; Swagger UI at http://localhost:8080/swagger-ui.html)
 - Run (web): `cd web; npm run dev` (serves http://localhost:5173, proxies /api)
+- Regenerate API types (web): `cd web; npm run gen:api` — reads the OpenAPI doc
+  from the running API (start it first) and rewrites `src/api/schema.d.ts`
+  (generated, committed; ADR 005).
 - Build: `cd api; .\mvnw clean verify` and `cd web; npm ci; npm run build`
 - Test (all): `cd api; .\mvnw verify` (needs Docker for Testcontainers)
 - Lint / format: `cd web; npm run lint; npm run format`

@@ -1,2 +1,5 @@
 dist
 node_modules
+
+# Generated from the OpenAPI contract (ADR 005); never formatted or hand-edited.
+src/api/schema.d.ts

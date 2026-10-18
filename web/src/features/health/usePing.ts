@@ -1,18 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
+import { api } from '../../api/client'
+import type { components } from '../../api/schema'
 
-/** Response of GET /api/ping. Hand-written for now; from Day 6 API types come
- *  from the generated OpenAPI file (ADR 005, .claude/rules/frontend.md). */
-export interface Ping {
-  status: string
-  time: string
-}
+/** Response of GET /api/ping, from the generated OpenAPI types (ADR 005). */
+export type Ping = components['schemas']['PingResponse']
 
 async function fetchPing(): Promise<Ping> {
-  const response = await fetch('/api/ping')
-  if (!response.ok) {
-    throw new Error(`API responded ${response.status}`)
+  const { data, error } = await api.GET('/api/ping')
+  if (error || !data) {
+    throw new Error('The API did not return a valid ping response.')
   }
-  return (await response.json()) as Ping
+  return data
 }
 
 export function usePing() {

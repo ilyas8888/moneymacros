@@ -6,7 +6,9 @@ import tseslint from 'typescript-eslint'
 import prettier from 'eslint-config-prettier'
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  // `dist` is build output; `schema.d.ts` is generated from the OpenAPI
+  // contract and never hand-edited (ADR 005).
+  { ignores: ['dist', 'src/api/schema.d.ts'] },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

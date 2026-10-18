@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "gen:api": "npx -y openapi-typescript@7.13.0 http://localhost:8080/v3/api-docs -o src/api/schema.d.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -13,6 +14,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.2",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4"

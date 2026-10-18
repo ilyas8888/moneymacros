@@ -9,7 +9,7 @@ export function HomePage() {
   } else if (isError) {
     apiState = `API: error (${error.message})`
   } else {
-    apiState = `API: ${data.status}`
+    apiState = `API: ${data.status} (v${data.version})`
   }
 
   return (
