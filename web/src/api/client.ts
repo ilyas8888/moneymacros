@@ -1,6 +1,32 @@
 import createClient, { type Middleware } from 'openapi-fetch'
 import type { paths } from './schema'
 
+/**
+ * RFC 9457 Problem Details (ADR 008). The API only documents its success
+ * responses, so this error shape is deliberately hand-written rather than
+ * generated (.claude/rules/frontend.md). The web reads only the status code and
+ * the `errors` field names, never the (English) `detail` message.
+ */
+export interface ProblemDetails {
+  title?: string
+  status?: number
+  detail?: string
+  errors?: { field: string; message: string }[]
+}
+
+/** An error carrying the HTTP status and parsed Problem Details, if any. */
+export class ApiError extends Error {
+  readonly status: number
+  readonly problem: ProblemDetails | undefined
+
+  constructor(status: number, problem?: ProblemDetails) {
+    super(`API error ${status}`)
+    this.name = 'ApiError'
+    this.status = status
+    this.problem = problem
+  }
+}
+
 // Methods that change state need a CSRF token; safe methods do not (ADR 003).
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
