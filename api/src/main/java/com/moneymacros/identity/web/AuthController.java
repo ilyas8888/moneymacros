@@ -5,6 +5,7 @@ import com.moneymacros.identity.account.AccountService;
 import com.moneymacros.identity.account.LoginService;
 import com.moneymacros.identity.security.SessionAuthenticator;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -68,7 +69,7 @@ class AuthController {
 	@GetMapping("/api/auth/csrf")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "Ensure a fresh XSRF-TOKEN cookie is set")
-	void csrf(CsrfToken token) {
+	void csrf(@Parameter(hidden = true) CsrfToken token) {
 		// Reading the token materialises the deferred token so the XSRF-TOKEN
 		// cookie is written on the response.
 		token.getToken();

@@ -1,5 +1,7 @@
 package com.moneymacros;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import java.time.Instant;
 
 /**
@@ -10,4 +12,7 @@ import java.time.Instant;
  * @param time   server time as an ISO-8601 instant
  * @param version the API version, from pom.xml
  */
-public record PingResponse(String status, Instant time, String version) {}
+public record PingResponse(
+		@Schema(requiredMode = RequiredMode.REQUIRED) String status,
+		@Schema(requiredMode = RequiredMode.REQUIRED) Instant time,
+		@Schema(requiredMode = RequiredMode.REQUIRED) String version) {}
