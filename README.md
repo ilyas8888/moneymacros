@@ -1,5 +1,5 @@
 # MoneyMacros
-
+[![CI](https://github.com/ilyas8888/moneymacros/actions/workflows/ci.yml/badge.svg)](https://github.com/ilyas8888/moneymacros/actions/workflows/ci.yml)
 **Status:** 🚧 In progress — MVP targeted for **10 Nov 2026**.
 
 ## Pitch
