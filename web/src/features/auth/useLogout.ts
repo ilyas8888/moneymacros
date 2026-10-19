@@ -22,7 +22,14 @@ export function useLogout() {
       }
     },
     onSettled: () => {
+      // Drop everything cached for the previous user, then record "logged out"
+      // explicitly. Setting ['me'] to null (instead of leaving the guards to
+      // re-derive it from a follow-up /api/me fetch) means RequireAuth and
+      // RedirectIfAuthed see a definite logged-out state right away, so the
+      // navigation to /login is never bounced back to / — even when the session
+      // had already expired and logout answered 401.
       queryClient.clear()
+      queryClient.setQueryData(['me'], null)
       navigate('/login', { replace: true })
     },
   })
