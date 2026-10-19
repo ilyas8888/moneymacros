@@ -15,3 +15,30 @@ body {
 main {
   text-align: center;
 }
+
+.language-switcher {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 20rem;
+  margin: 0 auto;
+  text-align: left;
+}
+
+form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+[role='alert'] {
+  margin: 0;
+  color: #b91c1c;
+}
