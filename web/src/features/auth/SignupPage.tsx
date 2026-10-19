@@ -56,7 +56,12 @@ export function SignupPage() {
           />
         </label>
         {invalidFields?.has('password') && (
-          <p role="alert">{t('auth.fieldErrors.password')}</p>
+          <p role="alert">
+            {t('auth.fieldErrors.password', {
+              min: PASSWORD_MIN,
+              max: PASSWORD_MAX,
+            })}
+          </p>
         )}
         {view?.type === 'emailTaken' && (
           <p role="alert">

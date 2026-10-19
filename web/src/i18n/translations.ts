@@ -13,10 +13,11 @@ export const en = {
   },
   home: {
     apiChecking: 'API: checking…',
-    apiError: 'API: error ({{message}})',
+    apiError: 'API: error',
     apiStatus: 'API: {{status}} (v{{version}})',
     greeting: 'Signed in as {{email}}.',
     logout: 'Log out',
+    logoutError: "Couldn't log out. Please try again.",
   },
   auth: {
     login: {
@@ -41,7 +42,7 @@ export const en = {
     },
     fieldErrors: {
       email: 'Enter a valid email address.',
-      password: 'Password must be between 12 and 128 characters.',
+      password: 'Password must be between {{min}} and {{max}} characters.',
     },
   },
 }
@@ -58,10 +59,11 @@ export const fr: typeof en = {
   },
   home: {
     apiChecking: 'API : vérification…',
-    apiError: 'API : erreur ({{message}})',
+    apiError: 'API : erreur',
     apiStatus: 'API : {{status}} (v{{version}})',
     greeting: 'Connecté en tant que {{email}}.',
     logout: 'Se déconnecter',
+    logoutError: 'La déconnexion a échoué. Veuillez réessayer.',
   },
   auth: {
     login: {
@@ -86,7 +88,8 @@ export const fr: typeof en = {
     },
     fieldErrors: {
       email: 'Saisissez une adresse e-mail valide.',
-      password: 'Le mot de passe doit comporter entre 12 et 128 caractères.',
+      password:
+        'Le mot de passe doit comporter entre {{min}} et {{max}} caractères.',
     },
   },
 }

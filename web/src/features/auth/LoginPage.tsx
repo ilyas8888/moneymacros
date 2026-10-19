@@ -51,14 +51,17 @@ export function LoginPage() {
             type="password"
             autoComplete="current-password"
             required
-            minLength={PASSWORD_MIN}
-            maxLength={PASSWORD_MAX}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
         </label>
         {invalidFields?.has('password') && (
-          <p role="alert">{t('auth.fieldErrors.password')}</p>
+          <p role="alert">
+            {t('auth.fieldErrors.password', {
+              min: PASSWORD_MIN,
+              max: PASSWORD_MAX,
+            })}
+          </p>
         )}
         {view && view.type !== 'fields' && (
           <p role="alert">

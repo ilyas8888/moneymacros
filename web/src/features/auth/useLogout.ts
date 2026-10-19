@@ -5,8 +5,9 @@ import { ApiError, api, type ProblemDetails } from '../../api/client'
 /**
  * Log out: end the server session, drop every cached query so nothing from this
  * user stays in memory, then go to /login. A 401 means the session was already
- * gone — still a successful log-out, so the cache is cleared and we navigate
- * regardless (handled in onSettled).
+ * gone — still a successful log-out. Any other failure (403, 500, network) means
+ * the server session may still be alive, so we must NOT fake a log-out: the
+ * mutation errors and the caller stays put and shows a message.
  */
 export function useLogout() {
   const queryClient = useQueryClient()
@@ -21,13 +22,12 @@ export function useLogout() {
         throw new ApiError(status, error as ProblemDetails | undefined)
       }
     },
-    onSettled: () => {
-      // Drop everything cached for the previous user, then record "logged out"
-      // explicitly. Setting ['me'] to null (instead of leaving the guards to
-      // re-derive it from a follow-up /api/me fetch) means RequireAuth and
-      // RedirectIfAuthed see a definite logged-out state right away, so the
-      // navigation to /login is never bounced back to / — even when the session
-      // had already expired and logout answered 401.
+    onSuccess: () => {
+      // Only here, once the session is actually gone. Record "logged out"
+      // explicitly (set ['me'] to null) rather than leaving the guards to
+      // re-derive it from a follow-up /api/me fetch, so RequireAuth and
+      // RedirectIfAuthed see a definite logged-out state right away and the
+      // navigation to /login is never bounced back to /.
       queryClient.clear()
       queryClient.setQueryData(['me'], null)
       navigate('/login', { replace: true })

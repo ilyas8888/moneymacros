@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLogout } from '../auth/useLogout'
 import { useMe } from '../auth/useMe'
@@ -10,11 +11,18 @@ export function HomePage() {
   const logout = useLogout()
   const { data, isPending, isError, error } = usePing()
 
+  // Keep the English error detail out of the UI; log it for debugging instead.
+  useEffect(() => {
+    if (isError) {
+      console.error('Failed to load API status', error)
+    }
+  }, [isError, error])
+
   let apiState: string
   if (isPending) {
     apiState = t('home.apiChecking')
   } else if (isError) {
-    apiState = t('home.apiError', { message: error.message })
+    apiState = t('home.apiError')
   } else {
     apiState = t('home.apiStatus', {
       status: data.status,
@@ -35,6 +43,7 @@ export function HomePage() {
       >
         {t('home.logout')}
       </button>
+      {logout.isError && <p role="alert">{t('home.logoutError')}</p>}
     </main>
   )
 }
