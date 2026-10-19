@@ -11,14 +11,13 @@ export type User = components['schemas']['UserResponse']
  */
 async function fetchMe(): Promise<User | null> {
   const { data, error, response } = await api.GET('/api/me')
-  // Read the status up front: the contract documents no error responses, so the
-  // typed result narrows its failure branch away and `response` would otherwise
-  // be seen as unreachable there.
-  const status = response.status
+  const { ok, status } = response
+  // 401 means logged out (null), not an error. Decide from the HTTP status,
+  // never from whether an error body was parsed (see useLogout).
   if (status === 401) {
     return null
   }
-  if (error || !data) {
+  if (!ok || !data) {
     throw new ApiError(status, error as ProblemDetails | undefined)
   }
   return data

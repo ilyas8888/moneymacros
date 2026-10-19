@@ -15,10 +15,13 @@ export function useLogout() {
   return useMutation({
     mutationFn: async () => {
       const { error, response } = await api.POST('/api/auth/logout')
-      // Read the status up front (see useMe): the contract documents no error
-      // responses, so the typed failure branch is narrowed away.
-      const status = response.status
-      if (error && status !== 401) {
+      const { ok, status } = response
+      // Decide from the HTTP status, never from whether openapi-fetch parsed an
+      // error body: when the API is down the Vite proxy answers 500 with an
+      // empty body, so there is no parsed error and a real failure would
+      // otherwise pass as success. A 401 means the session was already gone —
+      // still a successful log-out.
+      if (!ok && status !== 401) {
         throw new ApiError(status, error as ProblemDetails | undefined)
       }
     },

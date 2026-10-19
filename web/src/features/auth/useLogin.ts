@@ -13,10 +13,13 @@ export function useLogin() {
       const { data, error, response } = await api.POST('/api/auth/login', {
         body,
       })
-      if (data) {
+      const { ok, status } = response
+      // Success is a 2xx with a user, decided from the status rather than from
+      // whether an error body was parsed (see useLogout).
+      if (ok && data) {
         return data
       }
-      throw new ApiError(response.status, error as ProblemDetails | undefined)
+      throw new ApiError(status, error as ProblemDetails | undefined)
     },
     onSuccess: (user) => {
       queryClient.setQueryData(['me'], user)
