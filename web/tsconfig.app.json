@@ -8,6 +8,10 @@
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
 
+    /* `@/*` import alias, mirrored in vite.config.ts. No `baseUrl`: TS 6
+       deprecates it, and paths resolve relative to this tsconfig. */
+    "paths": { "@/*": ["./src/*"] },
+
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
