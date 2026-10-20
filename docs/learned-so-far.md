@@ -1,6 +1,14 @@
-# Learned so far: Days 1 to 5
+# Learned so far: Days 1 to 7
 
-A study log kept while building MoneyMacros, 13 to 17 October 2026. Each section explains one idea, shows where it lives in the project, then asks questions: click a question to reveal its answer (in Obsidian, switch to Reading view).
+A study log kept while building MoneyMacros, 13 to 20 October 2026. Each section explains one idea, shows where it lives in the project, then asks questions: click a question to reveal its answer (in Obsidian, switch to Reading view).
+
+From Day 6, new ideas come as **defense cards**, built to hold your ground in front of a jury or an interviewer:
+
+- **The picture:** a diagram you could redraw on a whiteboard.
+- **One sentence:** the idea, without jargon.
+- **For a non-developer:** an everyday comparison, because juries often include people who don't code.
+- **In MoneyMacros:** where it lives in the code.
+- **The ladder:** a jury digs in three steps (What is it? Why this choice? What if…?), so each card prepares all three.
 
 > [!TIP]
 > Revise like an interview: read a question, answer it out loud, then open it to compare.
@@ -14,6 +22,8 @@ A study log kept while building MoneyMacros, 13 to 17 October 2026. Each section
 | 3 · Thu 15 Oct | Walking skeleton: React → Spring Boot → PostgreSQL, CI | How a request travels, configuration, dependency injection |
 | 4 · Fri 16 Oct | `Money` type, one error format, a base for database tests | `BigDecimal` scale, Problem Details, kinds of tests |
 | 5 · Sat 17 Oct | Sign-up, log-in, log-out | Salted password hashing, sessions, CSRF, a port clash |
+| 6 · Sun 18 Oct | Log-in pages, generated API types, French and English | The API contract, props and state, server state, failure-path testing, pull requests |
+| 7 · Tue 20 Oct | Sign-up race fix, scoped error handlers, Money tests | Race conditions, controller advice, mocks versus a real database |
 
 ## 1. Architecture: one app, eight modules
 
@@ -123,7 +133,7 @@ sequenceDiagram
 
 In development, the browser only talks to Vite on port 5173, which forwards every `/api/...` request to Spring Boot on 8080. The browser sees a single origin, so there is no CORS to configure.
 
-**TypeScript interface.** `usePing.ts` describes the JSON it expects with `interface Ping { status: string; time: string }`. TypeScript checks the code against it while building, then removes it, so in the browser `as Ping` checks nothing. The API already sends a `version` field that `Ping` doesn't list: it reaches the browser, but the code can't use `data.version` until the interface declares it. Later, these types will be generated from the API's contract ([ADR 005](adr/005-openapi-contract.md)), so the two sides can't drift apart.
+**TypeScript types.** A type describes the shape of data, such as the JSON that `/api/ping` returns. TypeScript checks the code against it while building, then removes it: in the browser, nothing checks the JSON. Since Day 6, the web app's types are generated from the API's contract instead of being written by hand (card below).
 
 **Status codes met so far**
 
@@ -159,8 +169,87 @@ Messages and stack traces can show internals to an attacker. The errorId lets yo
 </details>
 
 <details>
-<summary>Does interface Ping check the JSON when the page runs?</summary>
-No. TypeScript uses it only while building, then removes it. "as Ping" is a promise to the compiler, not a check, so a wrong shape only fails later, where the data is used.
+<summary>Do the generated types check the JSON when the page runs?</summary>
+No. TypeScript uses them only while building, then removes them. They're only as true as the contract they come from, which is why the contract must be accurate.
+</details>
+
+### Defense card: types from the API contract
+
+```mermaid
+flowchart TB
+    java["Java records<br/>UserResponse, PingResponse"] -->|springdoc| spec["OpenAPI document<br/>/v3/api-docs"]
+    spec -->|"npm run gen:api"| types["schema.d.ts<br/>generated, never edited"]
+    types --> client["One API client<br/>openapi-fetch + CSRF header"]
+    client --> pages["React pages<br/>typed calls"]
+
+    classDef api fill:#E5E7EB,stroke:#6B7280,color:#111827
+    classDef contract fill:#A5F3FC,stroke:#0891B2,color:#111827
+    classDef web fill:#BFDBFE,stroke:#2563EB,color:#111827
+    class java api
+    class spec contract
+    class types,client,pages web
+```
+
+**One sentence:** the API describes itself in an OpenAPI document, and the web app generates its TypeScript types from it, so a change on one side becomes a build error on the other instead of a bug in production.
+
+**For a non-developer:** a restaurant prints its menu once, and every waiter's order pad is printed from that same menu, so nobody can order a dish that doesn't exist.
+
+**In MoneyMacros:** springdoc publishes the contract at `/v3/api-docs`. `npm run gen:api` turns it into `web/src/api/schema.d.ts`, which is committed and never edited by hand. One openapi-fetch client in `web/src/api/client.ts` uses those types and adds the CSRF header to every POST. On Day 6, the always-present fields were marked required and a fake `token` parameter on `/api/auth/csrf` was hidden, so the contract tells the truth ([ADR 005](adr/005-openapi-contract.md)).
+
+**The ladder**
+
+<details>
+<summary><b>What?</b> What is OpenAPI?</summary>
+A standard, machine-readable description of an API: its URLs, methods, request bodies and responses, written in JSON or YAML.
+</details>
+
+<details>
+<summary><b>Why?</b> Why generate the types instead of writing them?</summary>
+Hand-written types drift away from the server without anyone noticing. Generated ones follow the API, and TypeScript then points at every place in the web app that must change.
+</details>
+
+<details>
+<summary><b>What if?</b> What if the contract is wrong?</summary>
+Then the types are wrong too, so the contract has to be accurate. That's why Day 6 marked the always-present fields as required. The error answers aren't described yet, so the error type is still written by hand, with a comment saying so.
+</details>
+
+### Defense card: scoped error handlers
+
+```mermaid
+flowchart TB
+    auth["AuthController<br/>sign-up, log-in"] --> idh["IdentityExceptionHandler<br/>only for AuthController"]
+    idh --> a1["401 or 409<br/>wrong password, email used"]
+    other["Other controllers<br/>profile, ledger, from Day 8"] --> gh["GlobalExceptionHandler<br/>everyone else"]
+    gh --> a2["400 or 500<br/>validation, unexpected"]
+    auth -.->|validation errors| gh
+
+    classDef identity fill:#E9D5FF,stroke:#7C3AED,color:#111827
+    classDef shared fill:#E5E7EB,stroke:#6B7280,color:#111827
+    class auth,idh,a1 identity
+    class other,gh,a2 shared
+```
+
+**One sentence:** each error handler answers only for the controllers it's meant for, so log-in's messages never leak into other parts of the app.
+
+**For a non-developer:** each department has its own complaints desk, and the sign-up desk's answer, "wrong password", must never be given at the profile desk.
+
+**In MoneyMacros:** since Day 7, `IdentityExceptionHandler` carries `assignableTypes = AuthController.class`. The dotted arrow: log-in's validation errors (400) still go to `GlobalExceptionHandler`, because the identity handler only knows two kinds of error. "No session" (401) and "no CSRF token" (403) reach neither handler: Spring Security's filters answer before any controller runs.
+
+**The ladder**
+
+<details>
+<summary><b>What?</b> What is a controller advice?</summary>
+One class that turns exceptions into HTTP answers for many controllers, instead of a try/catch in each one.
+</details>
+
+<details>
+<summary><b>Why?</b> Why scope it to one controller?</summary>
+A message is only true in its context: "Invalid email or password" is right for log-in and wrong anywhere else.
+</details>
+
+<details>
+<summary><b>What if?</b> Two handlers can handle the same error: which one wins?</summary>
+The one with the higher priority, set with @Order. The identity handler goes first for AuthController, and the global one catches everything else.
 </details>
 
 ## 3. Configuration and dependency injection
@@ -370,7 +459,7 @@ sequenceDiagram
 - **CSRF.** Another site can make your browser send a request to our API, and the browser attaches our cookies automatically. So every POST must also carry a token only our own page can read: the `XSRF-TOKEN` cookie, copied into the `X-XSRF-TOKEN` header. Another site can't read our cookies, so it can't copy the token (the attack is drawn below). `SameSite=Lax` on the session cookie is a second barrier: browsers leave it off most requests started by other sites.
 - **Session fixation.** An attacker plants a session ID before you log in, then reuses it once you're logged in. Changing the ID at log-in makes the planted one useless.
 - **User enumeration and timing.** A wrong password and an unknown email get the same `401 Invalid email or password`. Spring Security also hashes a dummy password for unknown emails, so the response time doesn't give them away.
-- **Check-then-act race.** "Does this email exist? No, so insert it" lets two simultaneous sign-ups both pass the check. The database's unique constraint is the real guard; the Day 6 fix turns its error into the 409.
+- **Check-then-act race.** "Does this email exist? No, so insert it" lets two simultaneous sign-ups both pass the check. The database's unique constraint is the real guard; since Day 7, its error becomes the 409 (card below).
 - **Not OAuth2.** OAuth2 hands log-in to another provider ("Sign in with Google"). MoneyMacros checks the password itself.
 
 **The CSRF attack, step by step.** Our page copies the token from the cookie into a header. The other site's forged request arrives without it:
@@ -416,7 +505,171 @@ An attacker makes you log in with a session ID they already know. The app change
 Both can ask before either one inserts. Only the database's unique constraint checks and inserts in one step, so it has to be the real guard.
 </details>
 
-## 7. Testing
+### Defense card: the sign-up race
+
+```mermaid
+sequenceDiagram
+    participant A as Request A
+    participant B as Request B
+    participant D as PostgreSQL
+    A->>D: is the email free?
+    B->>D: is the email free?
+    D-->>A: yes
+    D-->>B: yes
+    A->>D: insert the user
+    D-->>A: saved, so 201 Created
+    B->>D: insert the user
+    D-->>B: refused by users_email_key
+    Note over B: was a 500 before Day 7, now a 409
+```
+
+**One sentence:** two sign-ups with the same email at the same instant can both pass the "is it free?" check, so only the database's unique rule can stop the second one.
+
+**For a non-developer:** two cashiers both see the last concert seat as free and both start selling it. Only the central booking system, which records one sale at a time, can refuse the second.
+
+**In MoneyMacros:** `AccountService.register` keeps the quick check for the usual duplicate, then inserts with `saveAndFlush`, so a duplicate fails inside the method instead of at commit time, where it used to become a 500. Only the `users_email_key` violation becomes a 409; any other database error stays a 500, so real bugs aren't hidden. `UserRegistered` goes out only once the row exists.
+
+**The ladder**
+
+<details>
+<summary><b>What?</b> What is a race condition?</summary>
+Two operations run at the same time, and the result depends on which one is faster.
+</details>
+
+<details>
+<summary><b>Why?</b> Why keep the check if the database is the guard?</summary>
+It answers the usual duplicate quickly. The unique rule covers the rare race.
+</details>
+
+<details>
+<summary><b>What if?</b> Why not lock the table instead?</summary>
+You can't lock a row that doesn't exist yet, and locking the whole table would make every sign-up wait in line. The unique rule does exactly this job, in one atomic step.
+</details>
+
+## 7. The web app: state, log-in and languages
+
+Day 6 put the log-in on screen: `/login`, `/signup` and a protected home page, in French and English. Three ideas carry it.
+
+### Defense card: props and state
+
+```mermaid
+flowchart LR
+    key["You type a letter"] --> input["input<br/>shows its value prop"]
+    input -->|"calls its onChange prop"| set["setEmail(text)"]
+    set --> state["LoginPage state<br/>email"]
+    state -->|"React redraws:<br/>new value prop"| input
+
+    classDef ui fill:#E5E7EB,stroke:#6B7280,color:#111827
+    classDef memory fill:#BFDBFE,stroke:#2563EB,color:#111827
+    class key,input,set ui
+    class state memory
+```
+
+**One sentence:** props are what a parent gives a child, read-only; state is a component's own memory, and changing it makes React redraw the component.
+
+**For a non-developer:** a chef receives an order from the waiter and can't rewrite it: that's props. His own notepad, where he crosses off what's done, is state: when he updates it, the kitchen works from the new version.
+
+**In MoneyMacros:** `LoginPage` keeps `email` and `password` in `useState`. Each `<input>` receives `value` and `onChange` as props: a controlled input, so the page always knows what's typed. The logged-in user isn't in `useState`: it comes from the server (next card).
+
+**The ladder**
+
+<details>
+<summary><b>What?</b> What happens when state changes?</summary>
+React runs the component again with the new value and updates only what changed on the page.
+</details>
+
+<details>
+<summary><b>Why?</b> Why a controlled input?</summary>
+The value lives in one place, the component's state, so the page can check it, clear it or send it at any moment.
+</details>
+
+<details>
+<summary><b>What if?</b> Can a child change its props?</summary>
+No. It calls a function the parent passed down, like onChange; the parent changes its state and passes new props. Data flows down, events flow up.
+</details>
+
+### Defense card: who is logged in
+
+```mermaid
+flowchart TB
+    me["useMe: GET /api/me<br/>through TanStack Query"] --> ans{"API answer"}
+    ans -->|"200 + user"| yes["Logged in<br/>RequireAuth shows /"]
+    ans -->|401| no["Logged out: null<br/>guards send you to /login"]
+    later["Log-out, or any<br/>later 401"] --> no
+
+    classDef query fill:#BFDBFE,stroke:#2563EB,color:#111827
+    classDef good fill:#BBF7D0,stroke:#16A34A,color:#111827
+    classDef bad fill:#FECDD3,stroke:#E11D48,color:#111827
+    classDef neutral fill:#E5E7EB,stroke:#6B7280,color:#111827
+    class me query
+    class yes good
+    class no bad
+    class ans,later neutral
+```
+
+**One sentence:** only the server really knows whether you're logged in, so the app asks it (`GET /api/me`) and every page reads that one answer.
+
+**For a non-developer:** instead of each employee remembering who has a badge, everyone checks the same badge reader at the door.
+
+**In MoneyMacros:** `useMe` keeps the answer in TanStack Query's cache. A 401 there means "logged out" (null), not an error, and it's never retried. `RequireAuth` protects `/`; `RedirectIfAuthed` sends logged-in users away from `/login` and `/signup`. Log-out sets the identity to null itself, and any later 401, such as an expired session, does the same.
+
+**The ladder**
+
+<details>
+<summary><b>What?</b> What is server state?</summary>
+Data the server owns and the browser only borrows a copy of. It can change without the page knowing, so it must be fetched, cached and refreshed: that's TanStack Query's job.
+</details>
+
+<details>
+<summary><b>Why?</b> Why not keep the user in useState or localStorage?</summary>
+It would go stale, and any script on the page can read localStorage. The session stays in an HttpOnly cookie, and the page simply asks the API.
+</details>
+
+<details>
+<summary><b>What if?</b> What if the session expires while the page is open?</summary>
+The next request answers 401, the app sets the user to null, and the guard sends you to /login.
+</details>
+
+### Defense card: French and English
+
+```mermaid
+flowchart LR
+    en["en: the source of the keys"] --> check{"fr typed as typeof en"}
+    check -->|same keys| ok["npm run build passes"]
+    check -->|a key missing in fr| ko["The build fails"]
+
+    classDef neutral fill:#E5E7EB,stroke:#6B7280,color:#111827
+    classDef good fill:#BBF7D0,stroke:#16A34A,color:#111827
+    classDef bad fill:#FECDD3,stroke:#E11D48,color:#111827
+    class en,check neutral
+    class ok good
+    class ko bad
+```
+
+**One sentence:** every text on screen comes from a translation file, and the build refuses to pass if French is missing a key that English has.
+
+**For a non-developer:** a bilingual menu whose printer refuses to print if a dish has an English name but no French one.
+
+**In MoneyMacros:** i18next and react-i18next. The app uses the browser's language and falls back to French; the FR | EN choice is remembered and sets `<html lang>`, which screen readers use to choose the voice. Error messages are chosen by the web app from the status code, never taken from the API's English text.
+
+**The ladder**
+
+<details>
+<summary><b>What?</b> What is i18n?</summary>
+Internationalisation (18 letters between the i and the n): preparing an app so its texts, dates and numbers change with the language, without touching the code.
+</details>
+
+<details>
+<summary><b>Why?</b> Why not show the API's error message?</summary>
+It's in English and written for developers. The web app picks a translated message from the status code: 401, 409 or 400.
+</details>
+
+<details>
+<summary><b>What if?</b> What if a translator forgets a key?</summary>
+The build fails before anything ships, because fr must have exactly the keys of en.
+</details>
+
+## 8. Testing
 
 | Kind | What runs | Example | Docker? |
 |---|---|---|---|
@@ -429,7 +682,7 @@ Both can ask before either one inserts. Only the database's unique constraint ch
 - Make a new test fail once on purpose. A test you've never seen fail may not test anything.
 - Testcontainers starts a real PostgreSQL 18 in Docker, never an in-memory stand-in like H2, so tests run on the same database as production.
 - All database tests share one Spring context and one PostgreSQL container, so the suite starts the database once.
-- Run `.\mvnw verify` before pushing, so you see a failing test before CI does (section 8).
+- Run `.\mvnw verify` before pushing, so you see a failing test before CI does (section 9).
 
 ### Check yourself
 
@@ -443,7 +696,93 @@ MoneyTest checks one class in memory. AuthIntegrationTest starts the whole app a
 The real version changes with every release. A fixed test value proves the controller returns whatever it's given.
 </details>
 
-## 8. Tools and debugging
+### Defense card: a mock versus the real database
+
+```mermaid
+flowchart TB
+    subgraph unit["Unit test: milliseconds, no Docker"]
+        direction LR
+        s1["AccountService"] --> fake["Fake repository<br/>says what we script"]
+    end
+    subgraph real["Integration test: seconds, real PostgreSQL"]
+        direction LR
+        s2["AccountService"] --> pg["PostgreSQL in Docker<br/>real unique rule"]
+    end
+    unit ~~~ real
+
+    classDef code fill:#E5E7EB,stroke:#6B7280,color:#111827
+    classDef fakeDb fill:#FED7AA,stroke:#EA580C,color:#111827
+    classDef realDb fill:#BBF7D0,stroke:#16A34A,color:#111827
+    class s1,s2 code
+    class fake fakeDb
+    class pg realDb
+```
+
+**One sentence:** a mock checks that your code reacts correctly to what you assume; only the real thing checks that the assumption is true.
+
+**For a non-developer:** a flight simulator tests the pilot's reactions; only a real flight tests the plane.
+
+**In MoneyMacros:** `AccountServiceTest` fakes the repository, runs in milliseconds, and proves the code turns the constraint error into a 409. `SignupRaceIntegrationTest` starts a real PostgreSQL in Docker with Testcontainers and uses a spy, the real repository with one method overridden, so the "is it free?" check says yes for an email that's taken. The insert then really hits `users_email_key`, and the API answers 409.
+
+**The ladder**
+
+<details>
+<summary><b>What?</b> Mock or spy: what's the difference?</summary>
+A mock is entirely fake. A spy is the real object with only the parts you override.
+</details>
+
+<details>
+<summary><b>Why?</b> Why both tests?</summary>
+Unit tests are fast and point straight at the bug; integration tests prove the pieces work together for real. Many fast tests and a few real ones: that's the test pyramid.
+</details>
+
+<details>
+<summary><b>What if?</b> Why does that test start its own Spring context?</summary>
+Replacing a bean changes the setup, so Spring can't reuse the shared context. Keeping it in one class limits the cost to a few seconds.
+</details>
+
+### Defense card: test the failure path
+
+```mermaid
+flowchart TB
+    click["Log out while the API is stopped"] --> vite["Vite answers 500<br/>with an empty body"]
+    vite --> old{"Day 6 code:<br/>error body?"}
+    vite --> now{"Fixed code:<br/>response.ok?"}
+    old -->|none, so success| bug["Shows /login<br/>session still alive"]
+    now -->|false, so failure| safe["Stays home<br/>says it couldn't log out"]
+
+    classDef neutral fill:#E5E7EB,stroke:#6B7280,color:#111827
+    classDef bad fill:#FECDD3,stroke:#E11D48,color:#111827
+    classDef good fill:#BBF7D0,stroke:#16A34A,color:#111827
+    class click,vite neutral
+    class old,bug bad
+    class now,safe good
+```
+
+**One sentence:** decide whether a request worked from its status code, and test what happens when the server fails, not only when it works.
+
+**For a non-developer:** a delivery app that marks a parcel "delivered" because the driver reported no problem, instead of because someone signed for it.
+
+**In MoneyMacros:** with the API stopped, the Vite dev server answers the log-out call with a 500 and an empty body. The first version asked "did an error message come back?". None did, so it showed `/login` while the server session stayed alive. Now every hook decides from `response.ok` (a 2xx status), and log-out only leaves the page once the server confirms it.
+
+**The ladder**
+
+<details>
+<summary><b>What?</b> What is a failure-path test?</summary>
+A test of what happens when something goes wrong: the server is down, a request times out, the input is bad. Many bugs hide there.
+</details>
+
+<details>
+<summary><b>Why?</b> Why does it matter for log-out?</summary>
+On a shared computer, someone who thinks they logged out may still be logged in for the next person.
+</details>
+
+<details>
+<summary><b>What if?</b> What if the API answers 401 to the log-out?</summary>
+That counts as success: the session is already gone, so the app clears its state and goes to /login.
+</details>
+
+## 9. Tools and debugging
 
 **The port clash of Day 5.** The API failed with a French "password authentication failed". The message came from the PostgreSQL installed on Windows, not from Docker's:
 
@@ -496,7 +835,46 @@ Two PostgreSQL servers listened on port 5432, and localhost reached the one inst
 Flyway records each applied migration with a checksum. A changed or missing one fails validation, and other databases would end up with a different schema.
 </details>
 
-## 9. Algorithms
+### Defense card: the pull request workflow
+
+```mermaid
+flowchart LR
+    branch["Day branch"] --> pr["Pull request"]
+    pr --> ci["CI: api and web jobs"]
+    ci --> review{"Review"}
+    review -->|fix commits| pr
+    review -->|approved| merge["Merge into main"]
+
+    classDef neutral fill:#E5E7EB,stroke:#6B7280,color:#111827
+    classDef good fill:#BBF7D0,stroke:#16A34A,color:#111827
+    class branch,pr,ci,review neutral
+    class merge good
+```
+
+**One sentence:** each day's work lives on its own branch and reaches main only through a pull request, once CI passes and the code is reviewed.
+
+**For a non-developer:** an article is proofread before it's printed in the newspaper, not after.
+
+**In MoneyMacros:** since Day 6, one branch per day (`day-06-auth-pages`, `day-07-catch-up`), a pull request on GitHub, two CI jobs (api and web), a review, and only then the merge. Fix commits pushed to the branch update the pull request by themselves. After the merge: delete the branch, then `git switch main; git pull`.
+
+**The ladder**
+
+<details>
+<summary><b>What?</b> What is a pull request?</summary>
+A request to merge one branch into another, with the changes, the CI results and the review discussion in one place.
+</details>
+
+<details>
+<summary><b>Why?</b> Why not push straight to main?</summary>
+main must always build and run. A branch lets you try, review and fix without breaking it.
+</details>
+
+<details>
+<summary><b>What if?</b> What if CI fails on the pull request?</summary>
+Nothing reaches main. You push a fix commit to the same branch, CI runs again, and you merge once it's green.
+</details>
+
+## 10. Algorithms
 
 - **Big-O** describes how time or memory grows with the input size n. With 5 times more data, an O(n) loop takes about 5 times longer, and an O(n²) loop about 25 times.
 - **Two Sum, brute force:** try every pair with two nested loops, `j` starting at `i + 1` so an element is never paired with itself. O(n²) time, O(1) extra space. Loop over positions (`nums[i]` is the value), compare `nums[i] + nums[j]` with the target, and return positions, not values.
@@ -517,7 +895,7 @@ So an element is never added to itself, and each pair is checked only once.
 O(n²): for each of the n numbers, it scans the rest of the array.
 </details>
 
-## 10. Interview bank so far
+## 11. Interview bank so far
 
 Write your own version of each answer in `docs/private/interview-bank.md`, in 3 to 5 sentences.
 
@@ -528,16 +906,18 @@ Write your own version of each answer in `docs/private/interview-bank.md`, in 3 
 | 3 | What is dependency injection, and why through the constructor? | Objects receive their dependencies and Spring wires them; visible dependencies, `final` fields, easy tests; `PingController` and `@Value` |
 | 4 | Why is money never stored as a `double`? | Binary can't hold most decimal fractions (`0.1 + 0.2`); errors add up; minor units in a `long` and `BigDecimal` built from Strings; `Money` and ADR 002 |
 | 5 | How do you store passwords safely? | Never the password; a random salt for each one; a slow, memory-hard algorithm (Argon2id); log-in re-hashes with the stored salt; the same error for a wrong password and an unknown email |
+| 6 | What are props and state in React? | Props: read-only inputs from the parent; state: the component's memory, and changing it redraws it; a controlled input (`value` + `onChange`); `LoginPage`; the user comes from TanStack Query, not `useState` |
+| 7 | Why sessions and not JWT? | A server session in an HttpOnly cookie: scripts can't read it, and log-out revokes it at once; the trade-off is CSRF, covered by the token; a future mobile app would get its own token-based login |
 | Any | How did you use AI on this project? | Claude Code wrote code from prompts you prepared; you made the design decisions (the ADRs), reviewed every change, ran the checks, fixed what failed, and can explain each part |
 
-## 11. Problems you solved
+## 12. Problems you solved
 
-"Tell me about a problem you solved" is a classic interview question. Answer it with **STAR**: the Situation, your Task, the Action you took, and the Result. The last two stories also answer "How did you use AI?": you checked what the tool produced.
+"Tell me about a problem you solved" is a classic interview question. Answer it with **STAR**: the Situation, your Task, the Action you took, and the Result. All but the first story also answer "How did you use AI?": you checked what the tool produced and caught what it missed.
 
 **The wrong database (Day 5)**
 
 - **Situation and task:** the API had to start for the log-in check, but PostgreSQL rejected the password, in French.
-- **Action:** read the first real error and saw it came from the PostgreSQL installed on Windows, not Docker's. `docker compose ps` and `.env` showed why: both servers used port 5432, and `.env` was missing. Set `DB_PORT=5433` in `.env` (section 8).
+- **Action:** read the first real error and saw it came from the PostgreSQL installed on Windows, not Docker's. `docker compose ps` and `.env` showed why: both servers used port 5432, and `.env` was missing. Set `DB_PORT=5433` in `.env` (section 9).
 - **Result:** the API reached Docker's database and the manual check passed. Lesson: check *which* server answers, not only what it says.
 
 **A table nothing used (Day 3)**
@@ -551,3 +931,15 @@ Write your own version of each answer in `docs/private/interview-bank.md`, in 3 
 - **Situation and task:** five files cited `.claude/rules/backend.md` and `.claude/rules/frontend.md` in their comments, but neither file existed.
 - **Action:** checked the folder, then had both files written from the ADRs.
 - **Result:** every reference now leads somewhere. Lesson: verify what a tool says it did.
+
+**Log-out that pretended to work (Day 6)**
+
+- **Situation and task:** with the API stopped on purpose, clicking Log out still went to `/login`, as if it had worked.
+- **Action:** traced it: the Vite dev server answered 500 with an empty body, and the code decided success from the error body instead of the status. Had every hook decide from `response.ok`, and log-out leave the page only once the server confirms it.
+- **Result:** log-out is honest: if the server can't end the session, the page says so. Lesson: test the failure path, and trust the status code.
+
+**The sign-up race (Day 7)**
+
+- **Situation and task:** a review found that two sign-ups with the same email at the same instant could end in a 500.
+- **Action:** made the insert happen inside the method, turned only the email's unique-constraint error into a 409, and proved it twice: a fast unit test and a test against the real PostgreSQL.
+- **Result:** a clean 409 every time. Lesson: the database is the real guard, and a mock only proves your own assumptions.
