@@ -10,11 +10,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * Identity's error cases as RFC 9457 Problem Details (ADR 008). Ordered ahead of
- * the shared {@code GlobalExceptionHandler} (which is lowest precedence), so its
+ * Sign-up and log-in error cases as RFC 9457 Problem Details (ADR 008). Scoped to
+ * {@link AuthController} with {@code assignableTypes}, so the "Invalid email or
+ * password." 401 and the duplicate-email 409 stay specific to auth and are never
+ * returned for other modules' controllers (which arrive from Day 8). Ordered ahead
+ * of the shared {@code GlobalExceptionHandler} (lowest precedence), so its
  * catch-all cannot turn these into a 500.
  */
-@RestControllerAdvice
+@RestControllerAdvice(assignableTypes = AuthController.class)
 @Order(Ordered.HIGHEST_PRECEDENCE)
 class IdentityExceptionHandler {
 
