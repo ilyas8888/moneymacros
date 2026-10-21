@@ -166,6 +166,8 @@ erDiagram
         string city
         int household_size
         bigint net_income_minor
+        timestamptz created_at
+        timestamptz updated_at
     }
     budget_plans {
         uuid id PK
