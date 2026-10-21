@@ -46,7 +46,11 @@ spring:
     username: ${POSTGRES_USER:moneymacros}
     password: ${POSTGRES_PASSWORD:moneymacros}
 
-# Swagger UI on in dev only, served at /swagger-ui.html.
+# Swagger UI on in dev only, served at /swagger-ui.html. CSRF support lets you
+# exercise the session-protected endpoints (PUT /api/profile) straight from
+# Swagger UI with your browser session (ADR 003).
 springdoc:
   swagger-ui:
     enabled: true
+    csrf:
+      enabled: true

@@ -2,16 +2,12 @@ package com.moneymacros.identity.web;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.moneymacros.IntegrationTest;
 import com.moneymacros.identity.account.UserAccountRepository;
-import jakarta.servlet.http.Cookie;
-import java.util.HashMap;
-import java.util.Map;
+import com.moneymacros.support.ApiTestClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
  * Proves the sign-up race ends as a clean 409 against the real database. The
@@ -50,54 +44,26 @@ class SignupRaceIntegrationTest {
 	@MockitoSpyBean
 	UserAccountRepository accounts;
 
-	private final Map<String, Cookie> jar = new HashMap<>();
+	private ApiTestClient client;
 
 	@BeforeEach
 	void reset() {
-		jar.clear();
 		jdbc.execute("TRUNCATE TABLE spring_session_attributes, spring_session");
-		jdbc.execute("TRUNCATE TABLE users");
+		// CASCADE because profiles references users (Day 8); it clears profiles too.
+		jdbc.execute("TRUNCATE TABLE users CASCADE");
+		client = new ApiTestClient(mockMvc);
 	}
 
 	@Test
 	void duplicateThatBeatsThePreCheckStillGives409NotServerError() throws Exception {
-		signup(EMAIL, PASSWORD).andExpect(status().isCreated());
+		client.signup(EMAIL, PASSWORD).andExpect(status().isCreated());
 
 		// Force the pre-check to lose the race: the row already exists, but
 		// existsByEmail reports it does not, so the insert reaches the constraint.
 		doReturn(false).when(accounts).existsByEmail(anyString());
 
-		signup(EMAIL, PASSWORD)
+		client.signup(EMAIL, PASSWORD)
 				.andExpect(status().isConflict())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
-	}
-
-	// --- helpers --------------------------------------------------------------
-
-	private String ensureCsrf() throws Exception {
-		perform(get("/api/auth/csrf")).andExpect(status().isNoContent());
-		return jar.get("XSRF-TOKEN").getValue();
-	}
-
-	private ResultActions signup(String email, String password) throws Exception {
-		String token = ensureCsrf();
-		return perform(post("/api/auth/signup")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
-						{"email":"%s","password":"%s"}""".formatted(email, password))
-				.header("X-XSRF-TOKEN", token));
-	}
-
-	private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
-		jar.values().forEach(builder::cookie);
-		return mockMvc.perform(builder).andDo(result -> {
-			for (Cookie cookie : result.getResponse().getCookies()) {
-				if (cookie.getMaxAge() == 0) {
-					jar.remove(cookie.getName());
-				} else {
-					jar.put(cookie.getName(), cookie);
-				}
-			}
-		});
 	}
 }
