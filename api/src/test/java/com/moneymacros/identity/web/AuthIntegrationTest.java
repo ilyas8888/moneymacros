@@ -136,4 +136,13 @@ class AuthIntegrationTest {
 	void pingIsPublicThroughTheRealFilterChain() throws Exception {
 		client.perform(get("/api/ping")).andExpect(status().isOk());
 	}
+
+	@Test
+	void swaggerUiHtmlIsNotBlockedByTheFilterChain() throws Exception {
+		// The UI is disabled outside dev, so the path 404s rather than redirecting;
+		// what matters is that security no longer answers 401 for it.
+		int status = client.perform(get("/swagger-ui.html"))
+				.andReturn().getResponse().getStatus();
+		assertThat(status).isNotEqualTo(401);
+	}
 }
