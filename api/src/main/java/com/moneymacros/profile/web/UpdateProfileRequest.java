@@ -1,6 +1,7 @@
 package com.moneymacros.profile.web;
 
 import com.moneymacros.shared.MoneyDto;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -21,7 +22,7 @@ public record UpdateProfileRequest(
 		@NotBlank @Pattern(regexp = "MA", message = "country must be MA for the MVP") String country,
 		@NotBlank @Size(min = 1, max = 80) String city,
 		@NotNull @Min(1) @Max(12) Integer householdSize,
-		@NotNull MoneyDto netMonthlyIncome) {
+		@NotNull @Valid MoneyDto netMonthlyIncome) {
 
 	public UpdateProfileRequest {
 		if (city != null) {

@@ -124,6 +124,18 @@ class ProfileControllerTest {
 	}
 
 	@Test
+	void putRejectsAMissingIncomeAmount() throws Exception {
+		mockMvc.perform(put("/api/profile")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"country":"MA","city":"Casablanca","householdSize":3,
+								 "netMonthlyIncome":{"currency":"MAD"}}"""))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+				.andExpect(jsonPath("$.errors[?(@.field == 'netMonthlyIncome.amountMinor')]").exists());
+	}
+
+	@Test
 	void putRejectsAnOutOfRangeHouseholdSize() throws Exception {
 		mockMvc.perform(put("/api/profile")
 						.contentType(MediaType.APPLICATION_JSON)
