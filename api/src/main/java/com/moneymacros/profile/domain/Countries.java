@@ -1,5 +1,6 @@
 package com.moneymacros.profile.domain;
 
+import com.moneymacros.shared.FieldValidationException;
 import java.util.Currency;
 import java.util.Map;
 
@@ -22,12 +23,12 @@ public final class Countries {
 	/**
 	 * The currency for {@code country}.
 	 *
-	 * @throws InvalidProfileException (400) if the country is not supported
+	 * @throws FieldValidationException (400) if the country is not supported
 	 */
 	public static Currency currencyFor(String country) {
 		Currency currency = CURRENCY_BY_COUNTRY.get(country);
 		if (currency == null) {
-			throw new InvalidProfileException("country", "country must be MA for the MVP");
+			throw new FieldValidationException("country", "country must be MA for the MVP");
 		}
 		return currency;
 	}

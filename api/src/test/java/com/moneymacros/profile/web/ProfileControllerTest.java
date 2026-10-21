@@ -13,9 +13,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.moneymacros.identity.AuthenticatedUser;
-import com.moneymacros.profile.domain.InvalidProfileException;
 import com.moneymacros.profile.domain.Profile;
 import com.moneymacros.profile.domain.ProfileService;
+import com.moneymacros.shared.FieldValidationException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -137,7 +137,7 @@ class ProfileControllerTest {
 	@Test
 	void serviceRuleFailureIsReturnedAsAFieldErrorOnNetMonthlyIncome() throws Exception {
 		when(profileService.save(any(), anyString(), anyString(), anyInt(), anyLong(), anyString()))
-				.thenThrow(new InvalidProfileException("netMonthlyIncome",
+				.thenThrow(new FieldValidationException("netMonthlyIncome",
 						"currency must be MAD for country MA"));
 
 		mockMvc.perform(put("/api/profile")

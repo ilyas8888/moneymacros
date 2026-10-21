@@ -2,6 +2,7 @@ package com.moneymacros.profile.domain;
 
 import com.moneymacros.identity.UserRegistered;
 import com.moneymacros.profile.ProfileUpdated;
+import com.moneymacros.shared.FieldValidationException;
 import com.moneymacros.shared.Money;
 import java.util.Currency;
 import java.util.Optional;
@@ -56,11 +57,11 @@ public class ProfileService {
 			long netIncomeMinor, String currencyCode) {
 		Currency currency = Countries.currencyFor(country);
 		if (!currency.getCurrencyCode().equals(currencyCode)) {
-			throw new InvalidProfileException("netMonthlyIncome",
+			throw new FieldValidationException("netMonthlyIncome",
 					"currency must be " + currency.getCurrencyCode() + " for country " + country);
 		}
 		if (netIncomeMinor < 0 || netIncomeMinor > MAX_NET_INCOME_MINOR) {
-			throw new InvalidProfileException("netMonthlyIncome",
+			throw new FieldValidationException("netMonthlyIncome",
 					"net monthly income must be between 0 and " + MAX_NET_INCOME_MINOR + " minor units");
 		}
 		Profile profile = profiles.findByUserId(userId)
