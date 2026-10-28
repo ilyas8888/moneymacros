@@ -11,9 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.moneymacros.IntegrationTest;
 import com.moneymacros.identity.account.UserAccount;
 import com.moneymacros.identity.account.UserAccountRepository;
-import jakarta.servlet.http.Cookie;
-import java.util.HashMap;
-import java.util.Map;
+import com.moneymacros.support.ApiTestClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,14 +19,12 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
  * Drives the identity endpoints through the real Spring Security filter chain
- * (CSRF, session, authorization), with sessions persisted in PostgreSQL. A tiny
- * cookie jar carries the XSRF-TOKEN and SESSION cookies between requests, the way
- * a browser would.
+ * (CSRF, session, authorization), with sessions persisted in PostgreSQL. The
+ * {@link ApiTestClient} carries the XSRF-TOKEN and SESSION cookies between
+ * requests, the way a browser would.
  */
 @IntegrationTest
 @AutoConfigureMockMvc
@@ -47,23 +43,24 @@ class AuthIntegrationTest {
 	@Autowired
 	JdbcTemplate jdbc;
 
-	private final Map<String, Cookie> jar = new HashMap<>();
+	private ApiTestClient client;
 
 	@BeforeEach
 	void reset() {
-		jar.clear();
 		jdbc.execute("TRUNCATE TABLE spring_session_attributes, spring_session");
-		jdbc.execute("TRUNCATE TABLE users");
+		// CASCADE because profiles references users (Day 8); it clears profiles too.
+		jdbc.execute("TRUNCATE TABLE users CASCADE");
+		client = new ApiTestClient(mockMvc);
 	}
 
 	@Test
 	void signupLogsInAndMeReturnsTheUserAndASessionRowExists() throws Exception {
-		signup(EMAIL, PASSWORD)
+		client.signup(EMAIL, PASSWORD)
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.id").isNotEmpty())
 				.andExpect(jsonPath("$.email").value(NORMALISED_EMAIL));
 
-		perform(get("/api/me"))
+		client.perform(get("/api/me"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.email").value(NORMALISED_EMAIL));
 
@@ -73,23 +70,23 @@ class AuthIntegrationTest {
 
 	@Test
 	void duplicateEmailGives409AsProblemDetails() throws Exception {
-		signup(EMAIL, PASSWORD).andExpect(status().isCreated());
+		client.signup(EMAIL, PASSWORD).andExpect(status().isCreated());
 
-		signup(EMAIL, PASSWORD)
+		client.signup(EMAIL, PASSWORD)
 				.andExpect(status().isConflict())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
 	}
 
 	@Test
 	void wrongPasswordAndUnknownEmailGiveTheSame401() throws Exception {
-		signup(EMAIL, PASSWORD).andExpect(status().isCreated());
+		client.signup(EMAIL, PASSWORD).andExpect(status().isCreated());
 
-		String wrongPassword = login(EMAIL, "wrong-password-xyz")
+		String wrongPassword = client.login(EMAIL, "wrong-password-xyz")
 				.andExpect(status().isUnauthorized())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
 				.andReturn().getResponse().getContentAsString();
 
-		String unknownEmail = login("nobody@example.com", PASSWORD)
+		String unknownEmail = client.login("nobody@example.com", PASSWORD)
 				.andExpect(status().isUnauthorized())
 				.andReturn().getResponse().getContentAsString();
 
@@ -98,7 +95,7 @@ class AuthIntegrationTest {
 
 	@Test
 	void meWithoutASessionGives401AndNoBasicChallenge() throws Exception {
-		perform(get("/api/me"))
+		client.perform(get("/api/me"))
 				.andExpect(status().isUnauthorized())
 				.andExpect(header().doesNotExist("WWW-Authenticate"))
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
@@ -106,28 +103,29 @@ class AuthIntegrationTest {
 
 	@Test
 	void postWithoutTheCsrfTokenGives403() throws Exception {
-		perform(post("/api/auth/signup")
+		client.perform(post("/api/auth/signup")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(body(EMAIL, PASSWORD)))
+				.content("""
+						{"email":"%s","password":"%s"}""".formatted(EMAIL, PASSWORD)))
 				.andExpect(status().isForbidden())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
 	}
 
 	@Test
 	void afterLogoutMeGives401() throws Exception {
-		signup(EMAIL, PASSWORD).andExpect(status().isCreated());
-		perform(get("/api/me")).andExpect(status().isOk());
+		client.signup(EMAIL, PASSWORD).andExpect(status().isCreated());
+		client.perform(get("/api/me")).andExpect(status().isOk());
 
-		String token = ensureCsrf();
-		perform(post("/api/auth/logout").header("X-XSRF-TOKEN", token))
+		String token = client.ensureCsrf();
+		client.perform(post("/api/auth/logout").header("X-XSRF-TOKEN", token))
 				.andExpect(status().isNoContent());
 
-		perform(get("/api/me")).andExpect(status().isUnauthorized());
+		client.perform(get("/api/me")).andExpect(status().isUnauthorized());
 	}
 
 	@Test
 	void storedHashIsArgon2idAndNeverContainsThePassword() throws Exception {
-		signup(EMAIL, PASSWORD).andExpect(status().isCreated());
+		client.signup(EMAIL, PASSWORD).andExpect(status().isCreated());
 
 		UserAccount account = accounts.findByEmail(NORMALISED_EMAIL).orElseThrow();
 		assertThat(account.getPasswordHash()).startsWith("$argon2id$");
@@ -136,49 +134,15 @@ class AuthIntegrationTest {
 
 	@Test
 	void pingIsPublicThroughTheRealFilterChain() throws Exception {
-		perform(get("/api/ping")).andExpect(status().isOk());
+		client.perform(get("/api/ping")).andExpect(status().isOk());
 	}
 
-	// --- helpers --------------------------------------------------------------
-
-	/** GET the CSRF endpoint, store the XSRF-TOKEN cookie, and return its value. */
-	private String ensureCsrf() throws Exception {
-		perform(get("/api/auth/csrf")).andExpect(status().isNoContent());
-		return jar.get("XSRF-TOKEN").getValue();
-	}
-
-	private ResultActions signup(String email, String password) throws Exception {
-		String token = ensureCsrf();
-		return perform(post("/api/auth/signup")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(body(email, password))
-				.header("X-XSRF-TOKEN", token));
-	}
-
-	private ResultActions login(String email, String password) throws Exception {
-		String token = ensureCsrf();
-		return perform(post("/api/auth/login")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(body(email, password))
-				.header("X-XSRF-TOKEN", token));
-	}
-
-	/** Attach the current cookie jar, perform the request, then capture Set-Cookie. */
-	private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
-		jar.values().forEach(builder::cookie);
-		return mockMvc.perform(builder).andDo(result -> {
-			for (Cookie cookie : result.getResponse().getCookies()) {
-				if (cookie.getMaxAge() == 0) {
-					jar.remove(cookie.getName());
-				} else {
-					jar.put(cookie.getName(), cookie);
-				}
-			}
-		});
-	}
-
-	private String body(String email, String password) {
-		return """
-				{"email":"%s","password":"%s"}""".formatted(email, password);
+	@Test
+	void swaggerUiHtmlIsNotBlockedByTheFilterChain() throws Exception {
+		// The UI is disabled outside dev, so the path 404s rather than redirecting;
+		// what matters is that security no longer answers 401 for it.
+		int status = client.perform(get("/swagger-ui.html"))
+				.andReturn().getResponse().getStatus();
+		assertThat(status).isNotEqualTo(401);
 	}
 }

@@ -56,6 +56,9 @@ class SecurityConfig {
 								"/api/auth/login",
 								"/actuator/health",
 								"/v3/api-docs/**",
+								// swagger-ui.html only redirects to /swagger-ui/**, so it must be
+								// permitted too (the UI itself stays disabled outside the dev profile).
+								"/swagger-ui.html",
 								"/swagger-ui/**")
 						.permitAll()
 						.anyRequest().authenticated())

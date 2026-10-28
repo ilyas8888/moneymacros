@@ -1,5 +1,6 @@
 package com.moneymacros.shared.web;
 
+import com.moneymacros.shared.FieldValidationException;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -55,6 +56,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		body.setTitle("Validation failed");
 		body.setProperty("errors", errors);
 		return handleExceptionInternal(ex, body, headers, HttpStatus.BAD_REQUEST, request);
+	}
+
+	/**
+	 * A module's business-rule failure, returned in the same shape as bean
+	 * validation so a form shows the message under the right field whether the rule
+	 * was enforced by an annotation or by a service. Being the only handler for this
+	 * type across the whole API, every module throws {@link FieldValidationException}
+	 * and gets one consistent 400 without copying this body.
+	 */
+	@ExceptionHandler(FieldValidationException.class)
+	ProblemDetail handleFieldValidation(FieldValidationException ex) {
+		ProblemDetail body = ProblemDetail.forStatusAndDetail(
+				HttpStatus.BAD_REQUEST, "One or more fields are invalid.");
+		body.setTitle("Validation failed");
+		body.setProperty("errors", List.of(new FieldError(ex.getField(), ex.getMessage())));
+		return body;
 	}
 
 	/**
